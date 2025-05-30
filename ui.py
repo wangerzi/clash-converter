@@ -2,7 +2,7 @@ import streamlit as st
 import requests
 import yaml
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from app.utils import fetch_and_transform_config
 from app.config import config_manager
 
@@ -36,13 +36,14 @@ def main():
     
     with status_col1:
         if config["last_update"]:
-            last_update = datetime.fromisoformat(config["last_update"])
-            st.info(f"最后更新时间: {last_update.strftime('%Y-%m-%d %H:%M:%S')}")
+            last_update = datetime.fromtimestamp(config["last_update"])
+            st.info(f"最后更新时间: {last_update.astimezone(timezone(timedelta(hours=8))).strftime('%Y-%m-%d %H:%M:%S')}")
         else:
             st.warning("尚未进行过更新")
     
     with status_col2:
         if st.button("立即更新"):
+            st.info(f"开始更新: {config['url']}")
             try:
                 transformed_config = fetch_and_transform_config(config["url"])
                 config_manager.save_cached_proxy(transformed_config)
@@ -53,28 +54,11 @@ def main():
     
     # Display configurations
     st.header("配置预览")
-    
-    col1, col2 = st.columns(2)
-    
-    with col1:
-        st.subheader("原始配置")
-        if config["url"]:
-            try:
-                response = requests.get(config["url"])
-                original_config = yaml.safe_load(response.text)
-                st.code(yaml.dump(original_config, allow_unicode=True), language="yaml")
-            except Exception as e:
-                st.error(f"无法加载原始配置: {str(e)}")
-        else:
-            st.info("请先配置订阅地址")
-    
-    with col2:
-        st.subheader("转换后配置")
-        cached_config = config_manager.load_cached_proxy()
-        if cached_config:
-            st.code(yaml.dump(cached_config, allow_unicode=True), language="yaml")
-        else:
-            st.info("暂无缓存的转换配置")
+    cached_config = config_manager.load_cached_proxy()
+    if cached_config:
+        st.code(yaml.dump(cached_config, allow_unicode=True), language="yaml")
+    else:
+        st.info("暂无缓存的转换配置")
 
 if __name__ == "__main__":
     main() 

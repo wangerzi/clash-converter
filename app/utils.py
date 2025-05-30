@@ -21,35 +21,42 @@ def sort_server_name(name: str) -> tuple:
     return (999, name)
 
 def fetch_and_transform_config(url: str) -> dict:
-    """Fetch and transform Clash configuration"""
-    response = requests.get(url)
+    """获取并转换Clash配置"""
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.8',
+        'Accept-Encoding': 'gzip, deflate, br',
+        'Connection': 'keep-alive'
+    }
+    response = requests.get(url, headers=headers)
     if response.status_code != 200:
-        raise Exception(f"Failed to fetch configuration: {response.status_code}")
+        raise Exception(f"获取配置失败: {response.status_code}")
     
-    # Load original config
+    # 加载原始配置
     config = yaml.safe_load(response.text)
     
-    # Keep original proxies
+    # 保留原始代理
     proxies = config.get("proxies", [])
     
-    # Sort proxies by name
+    # 按名称排序代理
     proxies.sort(key=lambda x: sort_server_name(x["name"]))
     
-    # Create new proxy group
+    # 创建新的代理组
     proxy_groups = [{
-        "name": "节点选择",
+        "name": "🔰 节点选择",
         "type": "select",
         "proxies": [proxy["name"] for proxy in proxies]
     }]
     
-    # Add direct proxy group
+    # 添加直连代理组
     proxy_groups.append({
         "name": "🎯 不用代理",
         "type": "select",
         "proxies": ["DIRECT"]
     })
     
-    # Define fixed rules
+    # 定义固定规则
     rules = [
         "DOMAIN-SUFFIX,local,🎯 不用代理",
         "IP-CIDR,192.168.0.0/16,🎯 不用代理,no-resolve",
@@ -59,20 +66,130 @@ def fetch_and_transform_config(url: str) -> dict:
         "IP-CIDR,100.64.0.0/10,🎯 不用代理,no-resolve",
         "IP-CIDR6,::1/128,🎯 不用代理,no-resolve",
         "IP-CIDR6,fc00::/7,🎯 不用代理,no-resolve",
-        "IP-CIDR6,fe80::/10,🎯 不用代理,no-resolve"
+        "IP-CIDR6,fe80::/10,🎯 不用代理,no-resolve",
+        "RULE-SET,applications,DIRECT",
+        "DOMAIN,clash.razord.top,DIRECT",
+        "DOMAIN,yacd.haishan.me,DIRECT", 
+        "RULE-SET,private,DIRECT",
+        # "RULE-SET,reject,REJECT",
+        "RULE-SET,icloud,DIRECT",
+        "RULE-SET,apple,DIRECT",
+        "RULE-SET,google,DIRECT",
+        "RULE-SET,proxy,🔰 节点选择",
+        "RULE-SET,direct,DIRECT",
+        "RULE-SET,lancidr,DIRECT",
+        "RULE-SET,cncidr,DIRECT",
+        "RULE-SET,telegramcidr,🔰 节点选择",
+        "GEOIP,LAN,DIRECT",
+        "GEOIP,CN,DIRECT",
+        "MATCH,🔰 节点选择"
     ]
+    rule_providers = {
+        "reject": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt",
+            "path": "./ruleset/reject.yaml",
+            "interval": 86400
+        },
+        "icloud": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt",
+            "path": "./ruleset/icloud.yaml",
+            "interval": 86400
+        },
+        "apple": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt",
+            "path": "./ruleset/apple.yaml",
+            "interval": 86400
+        },
+        "google": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt",
+            "path": "./ruleset/google.yaml",
+            "interval": 86400
+        },
+        "proxy": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt",
+            "path": "./ruleset/proxy.yaml",
+            "interval": 86400
+        },
+        "direct": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt",
+            "path": "./ruleset/direct.yaml",
+            "interval": 86400
+        },
+        "private": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt",
+            "path": "./ruleset/private.yaml",
+            "interval": 86400
+        },
+        "gfw": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt",
+            "path": "./ruleset/gfw.yaml",
+            "interval": 86400
+        },
+        "tld-not-cn": {
+            "type": "http",
+            "behavior": "domain",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt",
+            "path": "./ruleset/tld-not-cn.yaml",
+            "interval": 86400
+        },
+        "telegramcidr": {
+            "type": "http",
+            "behavior": "ipcidr",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt",
+            "path": "./ruleset/telegramcidr.yaml",
+            "interval": 86400
+        },
+        "cncidr": {
+            "type": "http",
+            "behavior": "ipcidr",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt",
+            "path": "./ruleset/cncidr.yaml",
+            "interval": 86400
+        },
+        "lancidr": {
+            "type": "http",
+            "behavior": "ipcidr",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt",
+            "path": "./ruleset/lancidr.yaml",
+            "interval": 86400
+        },
+        "applications": {
+            "type": "http",
+            "behavior": "classical",
+            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt",
+            "path": "./ruleset/applications.yaml",
+            "interval": 86400
+        }
+    }
     
-    # Create new config
+    # 创建新配置
     new_config = {
         "port": config.get("port", 7890),
         "socks-port": config.get("socks-port", 7891),
-        "allow-lan": config.get("allow-lan", False),
+        "allow-lan": True,
         "mode": config.get("mode", "rule"),
         "log-level": config.get("log-level", "info"),
         "external-controller": config.get("external-controller", "127.0.0.1:9090"),
         "proxies": proxies,
         "proxy-groups": proxy_groups,
-        "rules": rules
+        "rules": rules,
+        "rule-providers": rule_providers
     }
     
     return new_config 

@@ -43,19 +43,16 @@ async def get_subscription(_, token: str):
         }, status=400)
     
     try:
-        # Try to load from cache first
+        # 尝试首先从缓存加载
         cached_config = config_manager.load_cached_proxy()
-        if cached_config and config["last_update"]:
-            # 检查上次更新时间是否在更新间隔内
-            last_update = datetime.fromisoformat(config["last_update"])
-            time_diff = (datetime.now() - last_update).total_seconds()
-            if time_diff < config["update_interval"]:
-                return response.text(
-                    yaml.dump(cached_config, allow_unicode=True),
-                    content_type="text/plain; charset=utf-8"
-                )
+        if cached_config and not config_manager.need_update():
+            # 如果有缓存且不需要更新,直接返回缓存的配置
+            return response.text(
+                yaml.dump(cached_config, allow_unicode=True),
+                content_type="text/plain; charset=utf-8"
+            )
         
-        # If no cache, fetch and transform
+        # 如果没有缓存，则获取并转换
         transformed_config = fetch_and_transform_config(config["url"])
         config_manager.save_cached_proxy(transformed_config)
         config_manager.update_last_update_time()

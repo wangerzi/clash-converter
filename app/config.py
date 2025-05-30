@@ -13,7 +13,7 @@ class ConfigManager:
     def load_config(self):
         """Load configuration from file"""
         if not self.config_path.exists():
-            return {"url": "", "update_interval": 3600, "last_update": None}
+            return {"url": "", "update_interval": 3600, "last_update": 0}
         
         with open(self.config_path, "r") as f:
             return json.load(f)
@@ -39,9 +39,27 @@ class ConfigManager:
     def update_last_update_time(self):
         """Update the last update timestamp in config"""
         config = self.load_config()
-        config["last_update"] = datetime.now().isoformat()
+        config["last_update"] = datetime.now().timestamp()
         self.save_config(config)
         return config["last_update"]
+    
+    def need_update(self) -> bool:
+        """检查是否需要更新配置
+        
+        Returns:
+            bool: True 表示需要更新，False 表示不需要更新
+        """
+        config = self.load_config()
+        last_update = config.get("last_update")
+        update_interval = config.get("update_interval", 3600)
+        
+        # 如果没有上次更新时间,需要更新
+        if not last_update:
+            return True
+            
+        now = datetime.now().timestamp()
+        # 如果当前时间大于上次更新时间+更新间隔,需要更新
+        return (last_update + update_interval) < now
 
 
 # Create a singleton instance

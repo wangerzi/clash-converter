@@ -7,7 +7,7 @@ RUN pip install -r requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple/
 
 COPY . .
 
-EXPOSE 8501  # Streamlit UI port
-EXPOSE 8000  # API port
+EXPOSE 8501
+EXPOSE 8000
 
 CMD ["python3", "main.py"] 
