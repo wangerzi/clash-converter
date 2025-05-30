@@ -20,6 +20,132 @@ def sort_server_name(name: str) -> tuple:
     # If no priority location found, return with lowest priority
     return (999, name)
 
+# 定义默认规则
+DEFAULT_RULES = [
+    "DOMAIN-SUFFIX,local,DIRECT",
+    "IP-CIDR,192.168.0.0/16,DIRECT,no-resolve",
+    "IP-CIDR,10.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,172.16.0.0/12,DIRECT,no-resolve",
+    "IP-CIDR,127.0.0.0/8,DIRECT,no-resolve",
+    "IP-CIDR,100.64.0.0/10,DIRECT,no-resolve",
+    "IP-CIDR6,::1/128,DIRECT,no-resolve",
+    "IP-CIDR6,fc00::/7,DIRECT,no-resolve",
+    "IP-CIDR6,fe80::/10,DIRECT,no-resolve",
+    "RULE-SET,applications,DIRECT",
+    "DOMAIN,clash.razord.top,DIRECT",
+    "DOMAIN,yacd.haishan.me,DIRECT", 
+    "DOMAIN-KEYWORD,llsite,DIRECT",
+    "DOMAIN-KEYWORD,wj2015,DIRECT", 
+    "DOMAIN-KEYWORD,llsops,DIRECT",
+    "DOMAIN-KEYWORD,liulishuo,DIRECT",
+    "DOMAIN-KEYWORD,thellsapi,DIRECT",
+    "RULE-SET,private,DIRECT",
+    "RULE-SET,icloud,DIRECT",
+    "RULE-SET,apple,DIRECT",
+    "RULE-SET,proxy,🔰 节点选择",
+    "RULE-SET,direct,DIRECT",
+    "RULE-SET,lancidr,DIRECT",
+    "RULE-SET,cncidr,DIRECT",
+    "RULE-SET,telegramcidr,🔰 节点选择",
+    "GEOIP,LAN,DIRECT",
+    "GEOIP,CN,DIRECT",
+    "MATCH,🔰 节点选择"
+]
+
+DEFAULT_RULE_PROVIDERS = {
+    "reject": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt",
+        "path": "./ruleset/reject.yaml",
+        "interval": 86400
+    },
+    "icloud": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt",
+        "path": "./ruleset/icloud.yaml",
+        "interval": 86400
+    },
+    "apple": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt",
+        "path": "./ruleset/apple.yaml",
+        "interval": 86400
+    },
+    "google": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt",
+        "path": "./ruleset/google.yaml",
+        "interval": 86400
+    },
+    "proxy": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt",
+        "path": "./ruleset/proxy.yaml",
+        "interval": 86400
+    },
+    "direct": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt",
+        "path": "./ruleset/direct.yaml",
+        "interval": 86400
+    },
+    "private": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt",
+        "path": "./ruleset/private.yaml",
+        "interval": 86400
+    },
+    "gfw": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt",
+        "path": "./ruleset/gfw.yaml",
+        "interval": 86400
+    },
+    "tld-not-cn": {
+        "type": "http",
+        "behavior": "domain",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt",
+        "path": "./ruleset/tld-not-cn.yaml",
+        "interval": 86400
+    },
+    "telegramcidr": {
+        "type": "http",
+        "behavior": "ipcidr",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt",
+        "path": "./ruleset/telegramcidr.yaml",
+        "interval": 86400
+    },
+    "cncidr": {
+        "type": "http",
+        "behavior": "ipcidr",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt",
+        "path": "./ruleset/cncidr.yaml",
+        "interval": 86400
+    },
+    "lancidr": {
+        "type": "http",
+        "behavior": "ipcidr",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt",
+        "path": "./ruleset/lancidr.yaml",
+        "interval": 86400
+    },
+    "applications": {
+        "type": "http",
+        "behavior": "classical",
+        "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt",
+        "path": "./ruleset/applications.yaml",
+        "interval": 86400
+    }
+}
+
 def fetch_and_transform_config(url: str) -> dict:
     """获取并转换Clash配置"""
     headers = {
@@ -56,131 +182,9 @@ def fetch_and_transform_config(url: str) -> dict:
         "proxies": ["DIRECT"]
     })
     
-    # 定义固定规则
-    rules = [
-        "DOMAIN-SUFFIX,local,🎯 不用代理",
-        "IP-CIDR,192.168.0.0/16,🎯 不用代理,no-resolve",
-        "IP-CIDR,10.0.0.0/8,🎯 不用代理,no-resolve",
-        "IP-CIDR,172.16.0.0/12,🎯 不用代理,no-resolve",
-        "IP-CIDR,127.0.0.0/8,🎯 不用代理,no-resolve",
-        "IP-CIDR,100.64.0.0/10,🎯 不用代理,no-resolve",
-        "IP-CIDR6,::1/128,🎯 不用代理,no-resolve",
-        "IP-CIDR6,fc00::/7,🎯 不用代理,no-resolve",
-        "IP-CIDR6,fe80::/10,🎯 不用代理,no-resolve",
-        "RULE-SET,applications,DIRECT",
-        "DOMAIN,clash.razord.top,DIRECT",
-        "DOMAIN,yacd.haishan.me,DIRECT", 
-        "DOMAIN-KEYWORD,llsite,DIRECT",
-        "DOMAIN-KEYWORD,wj2015,DIRECT", 
-        "DOMAIN-KEYWORD,llsops,DIRECT",
-        "DOMAIN-KEYWORD,liulishuo,DIRECT",
-        "DOMAIN-KEYWORD,thellsapi,DIRECT",
-        "RULE-SET,private,DIRECT",
-        # "RULE-SET,reject,REJECT",
-        "RULE-SET,icloud,DIRECT",
-        "RULE-SET,apple,DIRECT",
-        "RULE-SET,proxy,🔰 节点选择",
-        "RULE-SET,direct,DIRECT",
-        "RULE-SET,lancidr,DIRECT",
-        "RULE-SET,cncidr,DIRECT",
-        "RULE-SET,telegramcidr,🔰 节点选择",
-        "GEOIP,LAN,DIRECT",
-        "GEOIP,CN,DIRECT",
-        "MATCH,🔰 节点选择"
-    ]
-    rule_providers = {
-        "reject": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/reject.txt",
-            "path": "./ruleset/reject.yaml",
-            "interval": 86400
-        },
-        "icloud": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/icloud.txt",
-            "path": "./ruleset/icloud.yaml",
-            "interval": 86400
-        },
-        "apple": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/apple.txt",
-            "path": "./ruleset/apple.yaml",
-            "interval": 86400
-        },
-        "google": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/google.txt",
-            "path": "./ruleset/google.yaml",
-            "interval": 86400
-        },
-        "proxy": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/proxy.txt",
-            "path": "./ruleset/proxy.yaml",
-            "interval": 86400
-        },
-        "direct": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/direct.txt",
-            "path": "./ruleset/direct.yaml",
-            "interval": 86400
-        },
-        "private": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/private.txt",
-            "path": "./ruleset/private.yaml",
-            "interval": 86400
-        },
-        "gfw": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/gfw.txt",
-            "path": "./ruleset/gfw.yaml",
-            "interval": 86400
-        },
-        "tld-not-cn": {
-            "type": "http",
-            "behavior": "domain",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/tld-not-cn.txt",
-            "path": "./ruleset/tld-not-cn.yaml",
-            "interval": 86400
-        },
-        "telegramcidr": {
-            "type": "http",
-            "behavior": "ipcidr",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/telegramcidr.txt",
-            "path": "./ruleset/telegramcidr.yaml",
-            "interval": 86400
-        },
-        "cncidr": {
-            "type": "http",
-            "behavior": "ipcidr",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/cncidr.txt",
-            "path": "./ruleset/cncidr.yaml",
-            "interval": 86400
-        },
-        "lancidr": {
-            "type": "http",
-            "behavior": "ipcidr",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/lancidr.txt",
-            "path": "./ruleset/lancidr.yaml",
-            "interval": 86400
-        },
-        "applications": {
-            "type": "http",
-            "behavior": "classical",
-            "url": "https://cdn.jsdelivr.net/gh/Loyalsoldier/clash-rules@release/applications.txt",
-            "path": "./ruleset/applications.yaml",
-            "interval": 86400
-        }
-    }
+    # 从配置管理器获取规则配置
+    from .config import config_manager
+    rules_config = config_manager.load_rules_config()
     
     # 创建新配置
     new_config = {
@@ -188,12 +192,13 @@ def fetch_and_transform_config(url: str) -> dict:
         "socks-port": config.get("socks-port", 7891),
         "allow-lan": True,
         "mode": config.get("mode", "rule"),
+        "dns": config.get("dns"),
         "log-level": config.get("log-level", "info"),
         "external-controller": config.get("external-controller", "127.0.0.1:9090"),
         "proxies": proxies,
         "proxy-groups": proxy_groups,
-        "rules": rules,
-        "rule-providers": rule_providers
+        "rules": rules_config["rules"],
+        "rule-providers": rules_config["rule_providers"]
     }
     
     return new_config 

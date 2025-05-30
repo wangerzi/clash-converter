@@ -4,8 +4,6 @@ services:
   clash-proxy:
     build: .
     restart: always
-    env_file:
-      - .env
     volumes:
       - ./:/app
     ports:

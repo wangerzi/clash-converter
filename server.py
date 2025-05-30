@@ -13,7 +13,6 @@ app.config.REQUEST_TIMEOUT = 300
 app.config.REQUEST_MAX_SIZE = 1000000000
 
 # Clash proxy configurations
-AUTH_TOKEN = os.getenv("AUTH_TOKEN", "") # 支持逗号隔开，比如 aaa,bbb
 
 @app.get("/")
 async def welcome(_):
@@ -25,16 +24,15 @@ async def welcome(_):
 @app.get("/link/<token>")
 async def get_subscription(_, token: str):
     """Get transformed Clash configuration"""
-    # 支持多个 token，用逗号分隔
-    valid_tokens = [t.strip() for t in AUTH_TOKEN.split(",")]
-    if token not in valid_tokens:
+    # 从配置中读取 auth_tokens
+    config = config_manager.load_config()
+    if not config.get("auth_tokens") or token not in config["auth_tokens"]:
         return json({
             "code": 403,
             "message": "无效的访问令牌",
             "data": None
         }, status=403)
     
-    config = config_manager.load_config()
     if not config["url"]:
         return json({
             "code": 400,

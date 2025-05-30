@@ -9,11 +9,17 @@ class ConfigManager:
         self.data_dir.mkdir(exist_ok=True)
         self.config_path = self.data_dir / "config.json"
         self.cache_path = self.data_dir / "cached_config.yaml"
+        self.rules_path = self.data_dir / "rules_config.json"
 
     def load_config(self):
         """Load configuration from file"""
         if not self.config_path.exists():
-            return {"url": "", "update_interval": 3600, "last_update": 0}
+            return {
+                "url": "",
+                "update_interval": 3600,
+                "last_update": 0,
+                "auth_tokens": []
+            }
         
         with open(self.config_path, "r") as f:
             return json.load(f)
@@ -35,6 +41,24 @@ class ConfigManager:
         """Save transformed configuration to cache"""
         with open(self.cache_path, "w") as f:
             yaml.dump(config, f, allow_unicode=True)
+
+    def load_rules_config(self):
+        """Load rules configuration from file"""
+        if not self.rules_path.exists():
+            # Return default rules from utils.py
+            from .utils import DEFAULT_RULES, DEFAULT_RULE_PROVIDERS
+            return {
+                "rules": DEFAULT_RULES,
+                "rule_providers": DEFAULT_RULE_PROVIDERS
+            }
+        
+        with open(self.rules_path, "r") as f:
+            return json.load(f)
+
+    def save_rules_config(self, rules_config):
+        """Save rules configuration to file"""
+        with open(self.rules_path, "w") as f:
+            json.dump(rules_config, f, indent=2, ensure_ascii=False)
 
     def update_last_update_time(self):
         """Update the last update timestamp in config"""
