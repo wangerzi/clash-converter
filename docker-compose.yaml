@@ -1,0 +1,19 @@
+version: '3'
+
+networks:
+  lumina:
+    external: true
+
+services:
+  clash-proxy:
+    build: .
+    restart: always
+    environment:
+      - AUTH_TOKEN=your_secret_token  # 请修改为你的密钥
+    volumes:
+      - ./app/data:/app/data  # 配置和缓存目录
+    ports:
+      - "8501:8501"  # Streamlit UI
+      - "8000:8000"  # API
+    networks:
+      - lumina
